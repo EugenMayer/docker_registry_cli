@@ -1,3 +1,6 @@
+# WAT?#
+This cli-tool lets you query your private docker registry for different things. For now, there is no tool provided by docker to do so 
+
 # Installation#
 
      git clone https://github.com/EugenMayer/docker_registry_cli && cd docker_registry_cli && ./install.sh
@@ -54,3 +57,12 @@ This defines the default domain to query for
 
 Alternatively (not recommended):
 Enter your user: and password: into the configuration file listed above
+
+# Limitations#
+
+- Basic Auth only
+- HTTPS only (i consider HTTP to be a bug)
+- API v2 only
+
+# Contribute#
+You want better or new commands like deleting images, containers, layers .. well, why dont you do so and create a pull-request :)

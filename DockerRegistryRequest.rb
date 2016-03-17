@@ -25,6 +25,7 @@ class DockerRegistryRequest
       self.class.basic_auth user, pass
     else
       begin
+        # load the docker config and see, if the domain is included there - reuse the auth token
         config = JSON.parse(File.read(File.join(ENV['HOME'], '.docker/config.json')))
         token = config['auths'][domain]['auth']
         if(!token)
@@ -33,7 +34,7 @@ class DockerRegistryRequest
         end
 
         pp "Using existing token from config.json #{token}" if @@debug
-        # set the Auth header directly, since it is already base64 encoded
+        # set the Authorization header directly, since it is already base64 encoded
         self.class.headers['Authorization'] = "Basic #{token}"
       rescue Exception
         puts "No --user or --password. Still you did not yet login with 'docker login #{domain}'. Either set user and passwortd or login using 'docker login #{domain}'".colorize(:red)
@@ -43,6 +44,7 @@ class DockerRegistryRequest
     login_test
   end
 
+  ### check if the login actually will succeed
   def login_test
     result = self.class.get("/").parsed_response
     if result.has_key?("errors")
@@ -53,6 +55,7 @@ class DockerRegistryRequest
       puts "auth success".colorize(:green) if @@debug
     end
   end
+
   ### list all available repos
   def list(search_key = nil)
     result = self.class.get("/_catalog")
@@ -66,7 +69,7 @@ class DockerRegistryRequest
     list(search_key)
   end
 
-  ### search for a specific repo using a key ( wildcard )
+  ### list all tags of a repo
   def tags(repo)
     result = self.class.get("/#{repo}/tags/list")
     result['tags'].each{ |tag|

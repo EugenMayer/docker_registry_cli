@@ -4,8 +4,13 @@ require 'optparse'
 require 'colorize'
 require 'pp'
 
+require_relative "DockerRegistryRequest"
+
+# our defaults / defines
 options = {:user => nil,:password => nil, :domain => nil, :debug => false}
 ops = ['list','search', 'tags']
+
+# define our options and help
 OptionParser.new do |opts|
   opts.banner = "Usage: registry.rb [options]"
 
@@ -15,7 +20,10 @@ OptionParser.new do |opts|
   opts.on("-p", "--password PASSWORD", "optional, password to login") do |v|
     options[:password] = v
   end
-  opts.on("-d", "--debug", "debug") do |v|
+  opts.on("--domain DOMAIN", "Set this to override the domain you defined in ~./docker_registry.yml") do |v|
+    options[:domain] = v
+  end
+  opts.on("-d", "--debug", "debug mode") do |v|
     options[:debug] = v
   end
   opts.on("-h", "--help", "Prints this help") do
@@ -34,8 +42,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-require_relative "DockerRegistryRequest"
-
+# try to load values from tour configuration. Those get superseeded by the arguments though
 begin
   config = YAML::load(File.read(File.join(ENV['HOME'], '.docker_registry.yml')))
   if options[:debug]
@@ -43,7 +50,7 @@ begin
     pp config
   end
 
-  options[:domain] = config['domain'] if config['domain']
+  options[:domain] = config['domain'] if config['domain'] && !options[:domain]
   options[:user] = config['user'] if config['user'] && !options[:user]
   options[:password] = config['password'] if config['password'] && !options[:password]
 rescue
@@ -57,6 +64,7 @@ rescue
   end
 end
 
+# ensure a operation is set. Be aware, we used shift up there - so we always stick with 0
 if !ARGV[0]
   puts "Define the operation: #{ops.join(', ')}".colorize(:red)
   exit 1
@@ -69,12 +77,16 @@ else
   op = ARGV.shift
 end
 
+# print out some informations debug mode
 if options[:debug]
   pp options
   puts "Operation: #{op}".colorize(:blue)
 end
 
+# configure our request handler
 registry = DockerRegistryRequest.new(options[:domain], options[:user], options[:password], options[:debug])
+
+# run the operations, which can actually have different amounts of mandatory arguments
 case op
   when 'list'
     registry.list
