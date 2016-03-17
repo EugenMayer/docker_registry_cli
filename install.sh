@@ -9,7 +9,7 @@ bundle install
 echo "Should i create a symlink into /usr/local/bin"
 select yn in "Yes" "No"; do
     case $yn in
-        Yes ) ln -fs `pwd`/docker_registry.rb /usr/local/bin/docker_registry || sudo ln -fs `pwd`/registry.rb /usr/local/bin/docker_registry break;;
+        Yes ) sudo ln -fs `pwd`/docker_registry.rb /usr/local/bin/docker_registry; break;;
         No ) echo "skipped";;
     esac
 done
