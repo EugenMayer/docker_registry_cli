@@ -40,16 +40,16 @@ List all repositories:
 > latest
 
 # Configuration#
-To ease up your usage and still be secure, do
+To ease up your usage and still be secure, you can add some configuration
 
-1. If you did yet not do so, login into your registry using your local docker.
+1. If you did yet not do so (you will have..), login into your registry using your local docker.
 `
 docker login <yourdomain>
 `
-This creates a ~/.docker/config.json with your credentials encrypted and also lets you push on your registry now.
+This creates a `~/.docker/config.json` with your credentials *encrypted*. This also lets you push/pull from/to your registry from now on.
 
 
-2. 
+2. (skip this if you used install.sh)
 `
 echo "domain: <yourdomain>\n" > ~/.docker_registry.yml
 `
