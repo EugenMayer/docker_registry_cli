@@ -1,0 +1,5 @@
+# this is just a example for your config, put int under ~/.docker_registry.yml
+domain: docker.io
+# you should rather login using docker login, see the readme - do not set your password/user here. But you can
+user: you
+password: cant_be_to_secret_if_you_enter_it_here
