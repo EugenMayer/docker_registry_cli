@@ -14,7 +14,7 @@ ops = ['list','search', 'tags']
 OptionParser.new do |opts|
   opts.banner = "Usage: registry.rb [options]"
 
-  opts.on("-e", "--user USER", "optional, user to login") do |v|
+  opts.on("-u", "--user USER", "optional, user to login") do |v|
     options[:user] = v
   end
   opts.on("-p", "--password PASSWORD", "optional, password to login") do |v|
