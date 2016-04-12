@@ -71,8 +71,13 @@ class DockerRegistryRequest
 
   ### delete
   def delete_image(image_name, tag)
-    puts "NOT SUPPORTED YET!!!"
-    puts self.class.delete("/#{image_name}/manifests/#{tag}")
+    # be sure to enabel storage->delete->true in your registry, see https://github.com/docker/distribution/blob/master/docs/configuration.md
+    options = {
+        :headers => {
+            "Docker-Content-Digest"  => tag
+        }
+    }
+    puts self.class.delete("/#{image_name}/manifests/#{tag}", options)
   end
 
   ### list all tags of a repo

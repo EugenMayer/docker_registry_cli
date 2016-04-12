@@ -58,6 +58,10 @@ This defines the default domain to query for
 Alternatively (not recommended):
 Enter your user: and password: into the configuration file listed above
 
+3. Deleting images
+
+If you want to delete images, be sure to enable storage->delete->true in your registry config.yml, see https://github.com/docker/distribution/blob/master/docs/configuration.md
+
 # Limitations#
 
 - Basic Auth only
