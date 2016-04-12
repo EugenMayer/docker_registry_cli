@@ -69,15 +69,34 @@ class DockerRegistryRequest
     list(search_key)
   end
 
-  ### delete
+  ### delete, identified by image name and tag
+  ### @see https://docs.docker.com/registry/spec/api/#deleting-an-image
   def delete_image(image_name, tag)
     # be sure to enabel storage->delete->true in your registry, see https://github.com/docker/distribution/blob/master/docs/configuration.md
-    options = {
-        :headers => {
-            "Docker-Content-Digest"  => tag
-        }
-    }
-    puts self.class.delete("/#{image_name}/manifests/#{tag}", options)
+
+    # fetch digest
+    digest = digest(image_name,tag)
+    if !digest
+      puts "Could not find digest from tag #{tag}".colorize(:red)
+      exit 1
+    end
+    result =  self.class.delete("/#{image_name}/manifests/#{digest}")
+    if (result.code != 202)
+      puts "Could not delete image".colorize(:red)
+      exit 1
+    end
+  end
+
+  ### returns the digest for a tag
+  ### @see https://docs.docker.com/registry/spec/api/#pulling-an-image
+  def digest(image_name, tag)
+    result = self.class.get("/#{image_name}/manifests/#{tag}")
+
+    if (result.code != 200)
+      puts "Could not find digest for image #{image_name} with tag #{tag}".colorize(:red)
+      exit 1
+    end
+    return result.headers['docker-content-digest']
   end
 
   ### list all tags of a repo
