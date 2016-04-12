@@ -69,6 +69,12 @@ class DockerRegistryRequest
     list(search_key)
   end
 
+  ### delete
+  def delete_image(image_name, tag)
+    puts "NOT SUPPORTED YET!!!"
+    puts self.class.delete("/#{image_name}/manifests/#{tag}")
+  end
+
   ### list all tags of a repo
   def tags(repo)
     result = self.class.get("/#{repo}/tags/list")

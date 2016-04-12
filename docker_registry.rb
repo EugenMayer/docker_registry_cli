@@ -8,7 +8,7 @@ require_relative "DockerRegistryRequest"
 
 # our defaults / defines
 options = {:user => nil,:password => nil, :domain => nil, :debug => false}
-ops = ['list','search', 'tags']
+ops = ['list','search', 'tags', 'delete']
 
 # define our options and help
 OptionParser.new do |opts|
@@ -88,6 +88,9 @@ registry = DockerRegistryRequest.new(options[:domain], options[:user], options[:
 
 # run the operations, which can actually have different amounts of mandatory arguments
 case op
+  when 'delete'
+    key = ARGV.shift
+    registry.delete_image(key)
   when 'list'
     registry.list
   when 'search'
