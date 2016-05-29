@@ -6,6 +6,8 @@ require 'httparty'
 require 'yaml'
 require 'pp'
 
+require_relative 'auth/TokenAuthService'
+
 class DockerRegistryRequest
   include HTTParty
   format :json
@@ -16,10 +18,10 @@ class DockerRegistryRequest
   def initialize(domain, user = nil, pass = nil, debug = false)
     @@debug = debug
     self.class.base_uri "https://#{domain}/v2"
-    handle_auth(domain, user, pass)
+    handle_preauth(domain, user, pass)
   end
 
-  def handle_auth(domain, user = nil, pass = nil)
+  def handle_preauth(domain, user = nil, pass = nil)
     if user && pass
       # this will base64 encode automatically
       self.class.basic_auth user, pass
@@ -37,30 +39,47 @@ class DockerRegistryRequest
         # set the Authorization header directly, since it is already base64 encoded
         self.class.headers['Authorization'] = "Basic #{token}"
       rescue Exception
-        puts "No --user or --password. Still you did not yet login with 'docker login #{domain}'. Either set user and passwortd or login using 'docker login #{domain}'".colorize(:red)
-        puts Exception.to_s if @@debug
       end
     end
-    login_test
   end
 
   ### check if the login actually will succeed
-  def login_test
-    result = self.class.get("/").parsed_response
-    if result.has_key?("errors")
-      puts "Wrong credentials or wrong URI".colorize(:red)
-      pp result
-      exit
-    else
-      puts "auth success".colorize(:green) if @@debug
-    end
+  def authenticate(response)
+      headers = response.headers()
+      begin
+        if(headers.has_key?('www-authenticate'))
+        auth_description = headers['www-authenticate']
+        if(auth_description.match('Bearer realm='))
+          authService = TokenAuthService.new()
+          authService.auth(response, self)
+        end
+        end
+      rescue Exception
+          puts "Authentication failed".colorize(:red)
+      end
+  end
+
+  def login_strategy_bearer_token(auth_description)
+
   end
 
   ### list all available repos
   def list(search_key = nil)
-    result = self.class.get("/_catalog")
-    result['repositories'].each{ |repo|
-        puts repo if search_key.nil? || repo.include?(search_key)
+    response = self.class.get("/_catalog")
+    case (response.code)
+      when 200
+        # just continue
+      when 401
+        authenticate(response)
+        response = self.class.get("/_catalog")
+      else
+    end
+    unless response.code == 200
+      throw "Could not finish request, status #{response.code}"
+    end
+
+    response['repositories'].each{ |repo|
+      puts repo if search_key.nil? || repo.include?(search_key)
     }
   end
 
