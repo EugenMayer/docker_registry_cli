@@ -1,6 +1,12 @@
 # WAT?#
 This cli-tool lets you query your private docker registry for different things. For now, there is no tool provided by docker to do so 
 
+# Features #
+
+1. Supporting basic auth and also token auth (Bearer token) which are used by projects like Docker-Auth or Portus
+2. Reading credentials from config.json to reuse from docker login
+3. list images / tags or delete those
+
 # Installation#
 
      git clone https://github.com/EugenMayer/docker_registry_cli && cd docker_registry_cli && ./install.sh
@@ -11,8 +17,8 @@ For manual installation
 2. create a symlink 'docker_registry' into /usr/local/bin or were it suits you best
 
 # Usage#
-For help see
 
+For help see
 
     docker_registry --help
 
@@ -64,7 +70,6 @@ If you want to delete images, be sure to enable storage->delete->true in your re
 
 # Limitations#
 
-- Basic Auth only
 - HTTPS only (i consider HTTP to be a bug)
 - API v2 only
 
