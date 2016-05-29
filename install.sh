@@ -6,10 +6,10 @@ echo "domain: $domain" > ~/.docker_registry.yml
 echo "created configuration"
 echo "installing gems"
 bundle install
-echo "Should i create a symlink into /usr/local/bin"
+echo "Should i create a symlink into /usr/local/bin (needs sudo permissions)"
 select yn in "Yes" "No"; do
     case $yn in
-        Yes ) sudo ln -fs `pwd`/docker_registry.rb /usr/local/bin/docker_registry; break;;
+        Yes ) sudo ln -fs `pwd`/bin/docker_registry.rb /usr/local/bin/docker_registry; break;;
         No ) echo "skipped";;
     esac
 done

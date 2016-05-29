@@ -4,7 +4,7 @@ require 'optparse'
 require 'colorize'
 require 'pp'
 
-require_relative "DockerRegistryRequest"
+require_relative "requests/DockerRegistryRequest"
 
 # our defaults / defines
 options = {:user => nil,:password => nil, :domain => nil, :debug => false}
@@ -42,7 +42,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-# try to load values from tour configuration. Those get superseeded by the arguments though
+# try to load values from tour configuration. Those get superseded by the arguments though
 begin
   config = YAML::load(File.read(File.join(ENV['HOME'], '.docker_registry.yml')))
   if options[:debug]

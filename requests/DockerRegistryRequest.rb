@@ -6,7 +6,7 @@ require 'httparty'
 require 'yaml'
 require 'pp'
 
-require_relative 'auth/TokenAuthService'
+require_relative '../auth/TokenAuthService'
 
 class DockerRegistryRequest
   include HTTParty
