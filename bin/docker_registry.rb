@@ -4,11 +4,11 @@ require 'optparse'
 require 'colorize'
 require 'pp'
 
-require_relative "../requests/DockerRegistryRequest"
+require_relative '../commands/DockerRegistryCommand'
 
 # our defaults / defines
 options = {:user => nil,:password => nil, :domain => nil, :debug => false}
-ops = ['list','search', 'tags', 'delete_image']
+ops = ['list','search', 'tags', 'delete_image', 'delete_tag']
 
 # define our options and help
 OptionParser.new do |opts|
@@ -30,14 +30,16 @@ OptionParser.new do |opts|
 
     puts opts
     puts "\nArguments:"
-    puts "<registry-domain> <operation> <value(optional)>".colorize(:green)
+    puts '<registry-domain> <operation> <value(optional)>'.colorize(:green)
     puts "\nif you have set domain in ~/.docker_registry.yml you can ease it up like this:"
-    puts "<operation> <value(optional)>".colorize(:green)
+    puts '<operation> <value(optional)>'.colorize(:green)
 
     puts "\nOperations:"
-    puts "list: list all available repositorys"
-    puts "search <key>: search for a repository"
-    puts "tag <repo-name>: list all tags of a repository"
+    puts 'list: list all available repositorys'
+    puts 'search <key>: search for a repository'
+    puts 'tags <repo-name>: list all tags of a repository'
+    puts 'delete_image <repo-name> <tag>: delete a image with all its tags'
+    puts 'delete_tag <repo-name> <tag>: delete a tag'
     exit
   end
 end.parse!
@@ -46,7 +48,7 @@ end.parse!
 begin
   config = YAML::load(File.read(File.join(ENV['HOME'], '.docker_registry.yml')))
   if options[:debug]
-    puts "Found config:".colorize(:blue)
+    puts 'Found config:'.colorize(:blue)
     pp config
   end
 
@@ -55,9 +57,9 @@ begin
   options[:password] = config['password'] if config['password'] && !options[:password]
 rescue
   # just no config, move on
-  puts "No config found in ~/.docker_registry.yml . Create it and add domain:<> and optional user/password to avoid adding any arguments".colorize(:light_white)
+  puts 'No config found in ~/.docker_registry.yml . Create it and add domain:<> and optional user/password to avoid adding any arguments'.colorize(:light_white)
   if !ARGV[0]
-    puts "The first argument should be your registry domain without schema (HTTPS mandatory), optional with :port".colorize(:red)
+    puts 'The first argument should be your registry domain without schema (HTTPS mandatory), optional with :port'.colorize(:red)
     exit 1
   else
     options[:domain]  = ARGV.shift
@@ -84,29 +86,37 @@ if options[:debug]
 end
 
 # configure our request handler
-registry = DockerRegistryRequest.new(options[:domain], options[:user], options[:password], options[:debug])
+registry = DockerRegistryCommand.new(options[:domain], options[:user], options[:password], options[:debug])
 
 # run the operations, which can actually have different amounts of mandatory arguments
 case op
   when 'delete_image'
     if !ARGV[0]
-      puts "Please define a image name"
+      puts 'Please define a image name'
+      exit 1
+    else
+      image_name = ARGV.shift
+    end
+    registry.delete_image(image_name)
+  when 'delete_tag'
+    if !ARGV[0]
+      puts 'Please define a image name'
       exit 1
     else
       image_name = ARGV.shift
     end
     if !ARGV[0]
-      puts "Please define a tag"
+      puts 'Please define a tag'
       exit 1
     else
       tag = ARGV.shift
     end
-    registry.delete_image(image_name, tag)
+    registry.delete_tag(image_name, tag)
   when 'list'
     registry.list
   when 'search'
     if !ARGV[0]
-      puts "Please define a search key"
+      puts 'Please define a search key'
       exit 1
     else
       key = ARGV.shift
@@ -114,10 +124,17 @@ case op
     end
   when 'tags'
     if !ARGV[0]
-      puts "Please define a repo name"
+      puts 'Please define a repo name'
       exit 1
     else
       repo = ARGV.shift
-      registry.tags(repo)
+      tags = registry.tags(repo)
+      unless tags.nil?
+        tags.each { |tag|
+          puts tag
+        }
+      else
+        puts 'Not tags found'
+      end
     end
 end

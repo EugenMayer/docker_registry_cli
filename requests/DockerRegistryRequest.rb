@@ -56,6 +56,7 @@ class DockerRegistryRequest
     end
   end
 
+  ## sends a get request, authenticates if needed
   def send_get_request(path, options = {})
     # we try to send the request. if it fails due to auth, we need the returned scope
     # thats why we first try to do it without auth, then reusing the scope from the response
@@ -75,7 +76,7 @@ class DockerRegistryRequest
     return response
   end
 
-
+  ## sends a delete request, authenticates if needed
   def send_delete_request(path)
     response = self.class.delete(path)
     # need auth
@@ -87,42 +88,10 @@ class DockerRegistryRequest
         response = self.class.delete(path)
       else
     end
-    unless response.code == 200
+    if response.code != 200 && response.code != 202
       throw "Could not finish request, status #{response.code}"
     end
     return response
-  end
-
-  ### list all available repos
-  def list(search_key = nil)
-    response = send_get_request("/_catalog")
-    response['repositories'].each { |repo|
-      puts repo if search_key.nil? || repo.include?(search_key)
-    }
-  end
-
-  ### search for a specific repo using a key ( wildcard )
-  def search(search_key)
-    list(search_key)
-  end
-
-  ### delete, identified by image name and tag
-  ### @see https://docs.docker.com/registry/spec/api/#deleting-an-image
-  def delete_image(image_name, tag)
-    # be sure to enabel storage->delete->true in your registry, see https://github.com/docker/distribution/blob/master/docs/configuration.md
-
-    # fetch digest
-    digest = digest(image_name, tag)
-    if !digest
-      puts "Could not find digest from tag #{tag}".colorize(:red)
-      exit 1
-    end
-    result = send_delete_request("/#{image_name}/manifests/#{digest}")
-
-    unless result.code == 202
-      puts "Could not delete image".colorize(:red)
-      exit 1
-    end
   end
 
   ### returns the digest for a tag
@@ -133,25 +102,18 @@ class DockerRegistryRequest
             'Accept' => 'application/vnd.docker.distribution.manifest.v2+json'
         }
     }
-    response = send_get_request("/#{image_name}/manifests/#{tag}", options)
-
-    if (response.code != 200)
+    begin
+      response = send_get_request("/#{image_name}/manifests/#{tag}", options)
+    rescue
       puts "Could not find digest for image #{image_name} with tag #{tag}".colorize(:red)
       exit 1
     end
-    return response.headers['docker-content-digest']
-  end
 
-  ### list all tags of a repo
-  def tags(repo)
-    result = send_get_request("/#{repo}/tags/list")
-    if result.has_key?('tags') && !result['tags'].nil?
-      result['tags'].each { |tag|
-        puts tag
-      }
-    else
-      puts "Not tags found"
+    unless response.code == 200
+      puts "Could not find digest for image #{image_name} with tag #{tag}".colorize(:red)
+      exit 1
     end
 
+    return response.headers['docker-content-digest']
   end
 end
