@@ -7,6 +7,7 @@ require 'yaml'
 require 'pp'
 
 require_relative '../auth/TokenAuthService'
+require_relative '../auth/BasicAuthService'
 
 class DockerRegistryRequest
   include HTTParty
@@ -22,63 +23,80 @@ class DockerRegistryRequest
   end
 
   def handle_preauth(domain, user = nil, pass = nil)
-    if user && pass
-      # this will base64 encode automatically
-      self.class.basic_auth user, pass
-    else
-      begin
-        # load the docker config and see, if the domain is included there - reuse the auth token
-        config = JSON.parse(File.read(File.join(ENV['HOME'], '.docker/config.json')))
-        token = config['auths'][domain]['auth']
-        if(!token)
-          pp config if @@debug
-          throw('No auth token found for this domain')
-        end
-
-        pp "Using existing token from config.json #{token}" if @@debug
-        # set the Authorization header directly, since it is already base64 encoded
-        self.class.headers['Authorization'] = "Basic #{token}"
-      rescue Exception
+    # Only BasicAuth is supported
+    authService = BasicAuthService.new(self)
+    begin
+      if user && pass
+        # this will base64 encode automatically
+        authService.byCredentials(user, pass)
+      else
+        authService.byToken()
       end
+    rescue Exception
+      puts "No BasicAuth pre-auth available, will try to use different auth-services later".green
     end
+
   end
 
   ### check if the login actually will succeed
   def authenticate(response)
-      headers = response.headers()
-      begin
-        if(headers.has_key?('www-authenticate'))
+    headers = response.headers()
+    begin
+      if headers.has_key?('www-authenticate')
         auth_description = headers['www-authenticate']
-        if(auth_description.match('Bearer realm='))
-          authService = TokenAuthService.new()
-          authService.auth(response, self)
+        if auth_description.match('Bearer realm=')
+          authService = TokenAuthService.new(self)
+          authService.tokenAuth(response)
+        else
+          throw "Auth method not supported #{auth_description}"
         end
-        end
-      rescue Exception
-          puts "Authentication failed".colorize(:red)
       end
+    rescue Exception
+      puts "Authentication failed".colorize(:red)
+    end
   end
 
-  def login_strategy_bearer_token(auth_description)
-
-  end
-
-  ### list all available repos
-  def list(search_key = nil)
-    response = self.class.get("/_catalog")
+  def send_get_request(path)
+    # we try to send the request. if it fails due to auth, we need the returned scope
+    # thats why we first try to do it without auth, then reusing the scope from the response
+    response = self.class.get(path)
+    # need auth
     case (response.code)
       when 200
         # just continue
       when 401
         authenticate(response)
-        response = self.class.get("/_catalog")
+        response = self.class.get(path)
       else
     end
     unless response.code == 200
       throw "Could not finish request, status #{response.code}"
     end
+    return response
+  end
 
-    response['repositories'].each{ |repo|
+
+  def send_delete_request(path)
+    response = self.class.get(path)
+    # need auth
+    case (response.code)
+      when 200
+        # just continue
+      when 401
+        authenticate(response)
+        response = self.class.get(path)
+      else
+    end
+    unless response.code == 200
+      throw "Could not finish request, status #{response.code}"
+    end
+    return response
+  end
+
+  ### list all available repos
+  def list(search_key = nil)
+    response = send_get_request("/_catalog")
+    response['repositories'].each { |repo|
       puts repo if search_key.nil? || repo.include?(search_key)
     }
   end
@@ -94,12 +112,13 @@ class DockerRegistryRequest
     # be sure to enabel storage->delete->true in your registry, see https://github.com/docker/distribution/blob/master/docs/configuration.md
 
     # fetch digest
-    digest = digest(image_name,tag)
+    digest = digest(image_name, tag)
     if !digest
       puts "Could not find digest from tag #{tag}".colorize(:red)
       exit 1
     end
-    result =  self.class.delete("/#{image_name}/manifests/#{digest}")
+    result = send_delete_request("/#{image_name}/manifests/#{digest}")
+
     if (result.code != 202)
       puts "Could not delete image".colorize(:red)
       exit 1
@@ -109,19 +128,19 @@ class DockerRegistryRequest
   ### returns the digest for a tag
   ### @see https://docs.docker.com/registry/spec/api/#pulling-an-image
   def digest(image_name, tag)
-    result = self.class.get("/#{image_name}/manifests/#{tag}")
+    response = send_get_request("/#{image_name}/manifests/#{tag}")
 
-    if (result.code != 200)
+    if (response.code != 200)
       puts "Could not find digest for image #{image_name} with tag #{tag}".colorize(:red)
       exit 1
     end
-    return result.headers['docker-content-digest']
+    return response.headers['docker-content-digest']
   end
 
   ### list all tags of a repo
   def tags(repo)
-    result = self.class.get("/#{repo}/tags/list")
-    result['tags'].each{ |tag|
+    result = send_get_request("/#{repo}/tags/list")
+    result['tags'].each { |tag|
       puts tag
     }
   end

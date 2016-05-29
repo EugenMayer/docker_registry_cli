@@ -4,7 +4,7 @@ require 'optparse'
 require 'colorize'
 require 'pp'
 
-require_relative "requests/DockerRegistryRequest"
+require_relative "../requests/DockerRegistryRequest"
 
 # our defaults / defines
 options = {:user => nil,:password => nil, :domain => nil, :debug => false}
