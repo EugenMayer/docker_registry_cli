@@ -56,17 +56,17 @@ class DockerRegistryRequest
     end
   end
 
-  def send_get_request(path)
+  def send_get_request(path, options = {})
     # we try to send the request. if it fails due to auth, we need the returned scope
     # thats why we first try to do it without auth, then reusing the scope from the response
-    response = self.class.get(path)
+    response = self.class.get(path, options)
     # need auth
     case (response.code)
       when 200
         # just continue
       when 401
         authenticate(response)
-        response = self.class.get(path)
+        response = self.class.get(path, options)
       else
     end
     unless response.code == 200
@@ -77,14 +77,14 @@ class DockerRegistryRequest
 
 
   def send_delete_request(path)
-    response = self.class.get(path)
+    response = self.class.delete(path)
     # need auth
     case (response.code)
       when 200
         # just continue
       when 401
         authenticate(response)
-        response = self.class.get(path)
+        response = self.class.delete(path)
       else
     end
     unless response.code == 200
@@ -119,7 +119,7 @@ class DockerRegistryRequest
     end
     result = send_delete_request("/#{image_name}/manifests/#{digest}")
 
-    if (result.code != 202)
+    unless result.code == 202
       puts "Could not delete image".colorize(:red)
       exit 1
     end
@@ -128,7 +128,12 @@ class DockerRegistryRequest
   ### returns the digest for a tag
   ### @see https://docs.docker.com/registry/spec/api/#pulling-an-image
   def digest(image_name, tag)
-    response = send_get_request("/#{image_name}/manifests/#{tag}")
+    options = {
+        :headers => {
+            'Accept' => 'application/vnd.docker.distribution.manifest.v2+json'
+        }
+    }
+    response = send_get_request("/#{image_name}/manifests/#{tag}", options)
 
     if (response.code != 200)
       puts "Could not find digest for image #{image_name} with tag #{tag}".colorize(:red)
@@ -140,8 +145,13 @@ class DockerRegistryRequest
   ### list all tags of a repo
   def tags(repo)
     result = send_get_request("/#{repo}/tags/list")
-    result['tags'].each { |tag|
-      puts tag
-    }
+    if result.has_key?('tags') && !result['tags'].nil?
+      result['tags'].each { |tag|
+        puts tag
+      }
+    else
+      puts "Not tags found"
+    end
+
   end
 end
