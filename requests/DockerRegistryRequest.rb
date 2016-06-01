@@ -30,7 +30,7 @@ class DockerRegistryRequest
         # this will base64 encode automatically
         authService.byCredentials(user, pass)
       else
-        authService.byToken()
+        authService.byToken(domain)
       end
     rescue Exception
       puts "No BasicAuth pre-auth available, will try to use different auth-services later".green

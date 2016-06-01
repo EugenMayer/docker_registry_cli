@@ -15,7 +15,7 @@
       </COVERAGE_PATTERN>
     </EXTENSION>
     <RUBY_RUN_CONFIG NAME="SCRIPT_PATH" VALUE="$PROJECT_DIR$/bin/docker_registry.rb" />
-    <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="--domain registry.kw.kontextwork.com delete_image apline latest" />
+    <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="--domain docker.kontextwork.de list" />
     <method />
   </configuration>
 </component>
