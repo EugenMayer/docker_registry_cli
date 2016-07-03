@@ -14,7 +14,7 @@
         <PATTERN REGEXPS="/.rvm/" INCLUDED="false" />
       </COVERAGE_PATTERN>
     </EXTENSION>
-    <RUBY_RUN_CONFIG NAME="SCRIPT_PATH" VALUE="$PROJECT_DIR$/bin/docker_registry.rb" />
+    <RUBY_RUN_CONFIG NAME="SCRIPT_PATH" VALUE="$PROJECT_DIR$/bin/docker_registry_cli" />
     <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="--domain docker.kontextwork.de list" />
     <method />
   </configuration>

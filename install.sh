@@ -9,9 +9,7 @@ bundle install
 echo "Should i create a symlink into /usr/local/bin (needs sudo permissions)"
 select yn in "Yes" "No"; do
     case $yn in
-        Yes ) sudo ln -fs `pwd`/bin/docker_registry.rb /usr/local/bin/docker_registry; break;;
+        Yes ) sudo ln -fs `pwd`/bin/docker_registry_cli /usr/local/bin/docker_registry_cli; break;;
         No ) echo "skipped";;
     esac
 done
-
-echo "HINT: Ensure you run docker login $domain to save your credentials encrypted"

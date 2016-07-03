@@ -9,7 +9,12 @@ This cli-tool lets you query your private docker registry for different things. 
 
 # Installation#
 
-     git clone https://github.com/EugenMayer/docker_registry_cli && cd docker_registry_cli && ./install.sh
+    git clone https://github.com/EugenMayer/docker_registry_cli && cd docker_registry_cli && ./install.sh
+
+or
+
+    gem install docker_registry_cli
+
 
 For manual installation
 
@@ -20,14 +25,14 @@ For manual installation
 
 For help see
 
-    docker_registry --help
+    docker_registry_cli --help
 
 
 ### Examples###
 List all repositories: 
 
 
-    docker_registry list
+    docker_registry_cli list
 
 > nginx
 > php
@@ -36,24 +41,27 @@ List all repositories:
 
 List all repositories: 
 
-    docker_registry search php
+    docker_registry_cli search php
 
 > php
 > php7
 
-    docker_registry tags nginx
+    docker_registry_cli tags nginx
 
 > latest
 
 # Configuration#
-To ease up your usage and still be secure, you can add some configuration
+To ease up your usage, you can add some configuration
 
 1. If you did yet not do so (you will have..), login into your registry using your local docker.
 `
 docker login <yourdomain>
 `
-This creates a `~/.docker/config.json` with your credentials *encrypted*. This also lets you push/pull from/to your registry from now on.
+This creates a `~/.docker/config.json` with your credentials in that file (just base64 decoded, NOT encrypted). This also lets you push/pull from/to your registry from now on.
 
+**Be aware, unless you use a credentials helper, you user/password is saved plain-text this way**
+
+I plan to support the new docker credential helpers though
 
 2. (skip this if you used install.sh)
 `
@@ -69,7 +77,7 @@ Enter your user: and password: into the configuration file listed above
 If you want to delete images, be sure to enable storage->delete->true in your registry config.yml, see https://github.com/docker/distribution/blob/master/docs/configuration.md
 
 # Limitations#
-
+- **not supporting credential helpers yet for basic-auth**
 - HTTPS only (i consider HTTP to be a bug)
 - API v2 only
 
