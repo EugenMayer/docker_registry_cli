@@ -14,45 +14,54 @@ class DockerRegistryRequest
   format :json
   headers 'Content-Type' => 'application/json'
   headers 'Accept' => 'application/json'
-  @@debug = false
-
-  def initialize(domain, user = nil, pass = nil, debug = false)
-    @@debug = debug
-    self.class.base_uri "https://#{domain}/v2"
-    handle_preauth(domain, user, pass)
+  @debug = false
+  @registry_domain = nil
+  def initialize(registry_domain, user = nil, pass = nil, debug = false)
+    @debug = debug
+    @registry_domain = registry_domain
+    self.class.base_uri "https://#{registry_domain}/v2"
+    handle_pre_auth(registry_domain, user, pass)
   end
 
-  def handle_preauth(domain, user = nil, pass = nil)
+  def registry_domain
+    @registry_domain
+  end
+
+  def is_debug
+    return @debug
+  end
+
+  def handle_pre_auth(domain, user = nil, pass = nil)
     # Only BasicAuth is supported
-    authService = BasicAuthService.new(self)
+    auth_service = BasicAuthService.new(self)
     begin
       if user && pass
         # this will base64 encode automatically
-        authService.byCredentials(user, pass)
+        auth_service.byCredentials(user, pass)
       else
-        authService.byToken(domain)
+        auth_service.byToken
       end
     rescue Exception
-      puts "No BasicAuth pre-auth available, will try to use different auth-services later".green
+      puts 'No BasicAuth pre-auth available, will try to use different auth-services later'.green if is_debug
     end
 
   end
 
   ### check if the login actually will succeed
   def authenticate(response)
-    headers = response.headers()
+    headers = response.headers
     begin
       if headers.has_key?('www-authenticate')
         auth_description = headers['www-authenticate']
         if auth_description.match('Bearer realm=')
-          authService = TokenAuthService.new(self)
-          authService.tokenAuth(response)
+          auth_service = TokenAuthService.new(self)
+          auth_service.tokenAuth(response)
         else
           throw "Auth method not supported #{auth_description}"
         end
       end
-    rescue Exception
-      puts "Authentication failed".colorize(:red)
+    rescue Exception => e
+      puts "Authentication failed #{e.message}".colorize(:red)
     end
   end
 
@@ -73,7 +82,7 @@ class DockerRegistryRequest
     unless response.code == 200
       throw "Could not finish request, status #{response.code}"
     end
-    return response
+    response
   end
 
   ## sends a delete request, authenticates if needed
@@ -91,7 +100,7 @@ class DockerRegistryRequest
     if response.code != 200 && response.code != 202
       throw "Could not finish request, status #{response.code}"
     end
-    return response
+    response
   end
 
   ### returns the digest for a tag
@@ -114,6 +123,6 @@ class DockerRegistryRequest
       exit 1
     end
 
-    return response.headers['docker-content-digest']
+    response.headers['docker-content-digest']
   end
 end

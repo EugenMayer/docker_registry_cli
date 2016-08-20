@@ -7,7 +7,7 @@ class DockerRegistryCommand < DockerRegistryRequest
   def list(search_key = nil)
     response = send_get_request("/_catalog")
     if response['repositories'].nil?
-      puts "no repositories found"
+      puts 'no repositories found'
       exit 1
     else
       response['repositories'].each { |repo|

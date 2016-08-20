@@ -7,7 +7,7 @@ require 'pp'
 require_relative '../commands/DockerRegistryCommand'
 
 # our defaults / defines
-options = {:user => nil,:password => nil, :domain => nil, :debug => false}
+options = {:user => nil, :password => nil, :registry_domain => nil, :debug => false}
 ops = ['list','search', 'tags', 'delete_image', 'delete_tag']
 
 # define our options and help
@@ -20,10 +20,10 @@ OptionParser.new do |opts|
   opts.on("-p", "--password PASSWORD", "optional, password to login") do |v|
     options[:password] = v
   end
-  opts.on("--domain DOMAIN", "Set this to override the domain you defined in ~./docker_registry.yml") do |v|
-    options[:domain] = v
+  opts.on("-d", "--domain DOMAIN", "Set this to override the domain you defined in ~./docker_registry.yml") do |v|
+    options[:registry_domain] = v
   end
-  opts.on("-d", "--debug", "debug mode") do |v|
+  opts.on("-v", "--verbose", "verbose mode") do |v|
     options[:debug] = v
   end
   opts.on("-h", "--help", "Prints this help") do
@@ -52,7 +52,7 @@ begin
     pp config
   end
 
-  options[:domain] = config['domain'] if config['domain'] && !options[:domain]
+  options[:registry_domain] = config['domain'] if config['domain'] && !options[:registry_domain]
   options[:user] = config['user'] if config['user'] && !options[:user]
   options[:password] = config['password'] if config['password'] && !options[:password]
 rescue
@@ -62,7 +62,7 @@ rescue
     puts 'The first argument should be your registry domain without schema (HTTPS mandatory), optional with :port'.colorize(:red)
     exit 1
   else
-    options[:domain]  = ARGV.shift
+    options[:registry_domain]  = ARGV.shift
   end
 end
 
@@ -86,7 +86,7 @@ if options[:debug]
 end
 
 # configure our request handler
-registry = DockerRegistryCommand.new(options[:domain], options[:user], options[:password], options[:debug])
+registry = DockerRegistryCommand.new(options[:registry_domain], options[:user], options[:password], options[:debug])
 
 # run the operations, which can actually have different amounts of mandatory arguments
 case op

@@ -1,25 +1,15 @@
 # WAT?#
-This cli-tool lets you query your private docker registry for different things. For now, there is no tool provided by docker to do so 
+This cli-tool lets you query your private docker registry for different things and delete them 
 
 # Features #
 
-1. Supporting basic auth and also token auth (Bearer token) which are used by projects like Docker-Auth or Portus
-2. Reading credentials from config.json to reuse from docker login
-3. list images / tags or delete those
+1. List/Delete images and/or tags
+1. Supports _Basic Auth_ and _Bearer Token Auth_ which are used by projects like Docker-Auth or Portus
+1. Supports credential helper (preferred) and config.json auth (plain text auth, so will be removed in the future) 
 
 # Installation#
 
-    git clone https://github.com/EugenMayer/docker_registry_cli && cd docker_registry_cli && ./install.sh
-
-or
-
     gem install docker_registry_cli
-
-
-For manual installation
-
-1. get the repo and run bundle install
-2. create a symlink 'docker_registry' into /usr/local/bin or were it suits you best
 
 # Usage#
 
@@ -27,10 +17,8 @@ For help see
 
     docker_registry_cli --help
 
-
 ### Examples###
 List all repositories: 
-
 
     docker_registry_cli list
 
@@ -50,6 +38,14 @@ List all repositories:
 
 > latest
 
+Delete a tag
+
+    docker_registry_cli delete_tag someimage sometag
+
+Delete a image
+
+    docker_registry_cli delete_image someimage
+
 # Configuration#
 To ease up your usage, you can add some configuration
 
@@ -57,29 +53,29 @@ To ease up your usage, you can add some configuration
 `
 docker login <yourdomain>
 `
-This creates a `~/.docker/config.json` with your credentials in that file (just base64 decoded, NOT encrypted). This also lets you push/pull from/to your registry from now on.
+This creates a `~/.docker/config.json`. From docker 1.11 it will be automatically using the [credential helper](http://www.projectatomic.io/blog/2016/03/docker-credentials-store/): 
 
-**Be aware, unless you use a credentials helper, you user/password is saved plain-text this way**
+**In any way you should always use the credential helper, see [here](https://docs.docker.com/engine/reference/commandline/login/)**
 
-I plan to support the new docker credential helpers though
+Be aware, unless you use a credentials helper, your user/password is saved **plain-text!**
 
-2. (skip this if you used install.sh)
+Alternatively (not recommended):
+Provide user and password on each cli call
+
+2. optionally, define a default domain
 `
 echo "domain: <yourdomain>\n" > ~/.docker_registry.yml
 `
 This defines the default domain to query for
 
-Alternatively (not recommended):
-Enter your user: and password: into the configuration file listed above
 
-3. Deleting images
+# Advanced
+Deleting images
 
-If you want to delete images, be sure to enable storage->delete->true in your registry config.yml, see https://github.com/docker/distribution/blob/master/docs/configuration.md
+If you want to delete images, be sure to enable storage->delete->true in your registry-installation config.yml, see https://github.com/docker/distribution/blob/master/docs/configuration.md
 
 # Limitations#
-- **not supporting credential helpers yet for basic-auth**
 - HTTPS only (i consider HTTP to be a bug)
-- API v2 only
 
 # Contribute#
-You want better or new commands like deleting images, containers, layers .. well, why dont you do so and create a pull-request :)
+Happy to merge in pull requests!

@@ -1,20 +1,30 @@
+PATH
+  remote: .
+  specs:
+    docker_registry_cli (0.1.0)
+      colorize (~> 0)
+      httparty (~> 0)
+      ruby-keychain (~> 0)
+
 GEM
   remote: https://rubygems.org/
   specs:
-    colorize (0.7.7)
-    httparty (0.13.3)
-      json (~> 1.8)
+    colorize (0.8.1)
+    corefoundation (0.2.0)
+      ffi
+    ffi (1.9.14)
+    httparty (0.14.0)
       multi_xml (>= 0.5.2)
-    json (1.8.2)
     multi_xml (0.5.5)
+    ruby-keychain (0.3.2)
+      corefoundation (~> 0.2.0)
+      ffi
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  colorize
-  httparty
-  json
+  docker_registry_cli!
 
 BUNDLED WITH
-   1.10.6
+   1.11.2
