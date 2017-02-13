@@ -1,7 +1,8 @@
 [![Gem Version](https://badge.fury.io/rb/docker_registry_cli.svg)](https://badge.fury.io/rb/docker_registry_cli)
 
 # WAT?#
-This cli-tool lets you query your private docker registry for different things and delete them 
+This cli-tool lets you query your private docker registry for different things and delete them.
+**docker_registry_cli is yet build/tested on osx only **
 
 # Features #
 
